@@ -14,11 +14,11 @@ def sendData(file):
     # x = requests.post(url, data = myobj, files=file)
     x = requests.post(url, files=file)
     if x.text == "200":
-        os.remove("demofile.txt")
+        os.remove(file)
     else :
         print(f'Error {file}')
 
-entries = os.listdir('face2/')
+entries = os.listdir('data/')
 amountFile = len(entries)
 n = 0
 for file in entries:

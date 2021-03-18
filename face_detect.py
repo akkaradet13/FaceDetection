@@ -1,11 +1,9 @@
 import argparse as arg
-import time
-import cv2
+import time, cv2, os, datetime
 import numpy as np
 from skin_seg import *
 from FrontOrganDetect import *
-import os
-import datetime
+import RPi.GPIO as GPIO 
 
 #! Face Detect
 class Face_Detector():
@@ -36,7 +34,10 @@ class Face_Detector():
                 if Distance1 < 50 and Distance2 < 90:
                     rects.append(np.asarray([x,y,w,w*1.25], dtype=np.uint16))
         return rects
-    def Detect_Face_Vid(self,vid,size1,size2,scale_factor = 3):	
+    def Detect_Face_Vid(self,vid,size1,size2,scale_factor = 3):
+        channel = 21
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(channel, GPIO.OUT)
         n = 0
         frameCounter = 0
         alpha = 0.2
@@ -96,9 +97,12 @@ class Face_Detector():
                                 
                             cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
                             print(f'skin และ อวัยวะ {checkList} {len(checkList)}')
+                            
                             if len(checkList) >= int(f):
+                                GPIO.output(channel, GPIO.LOW)
                                 print('PASSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS')
                             else:
+                                GPIO.output(channel, GPIO.HIGH)
                                 print('NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
                         else:
                             print('skin แต่ ไม่เจออวัยวะ')
@@ -114,7 +118,6 @@ class Face_Detector():
                         w *= scale_factor
                         h *= scale_factor
                         face_crop = img[y0:y0+h, x0:x0+w]
-                        # font = cv2.FONT_HERSHEY_SIMPLEX
                         cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255),2)
                         print('final face',organCheck)
                         if organCheck is not None:
@@ -129,14 +132,12 @@ class Face_Detector():
                         cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
                 
             cv2.imshow('img', img)
-            # print(f'frameCounter => {frameCounter}')
             if frameCounter > 30 : frameCounter = 0
             frameCounter += 1
             n += 1
             
             stop = time.time()
             frameRate = abs((1/fps - (stop - start)))
-            # print(f'fram {frameRate}')
             time.sleep(frameRate)
             
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -144,30 +145,16 @@ class Face_Detector():
         vid.release()
 
 def checkFileName(checkList):
-    # entries = os.listdir('./face')
-    #'2012-09-04 06:00:00.000000'
     x = datetime.datetime.now()
     x = str(x.strftime("%Y-%m-%d+%H:%M:%S_%f"))
-    # return f'img{str(len(entries)+1)}.jpg'
     return f'data/{x}={checkList}=.jpg'
 
 #! Main
 def Arg_Parser():
     Arg_Par = arg.ArgumentParser()
-    Arg_Par.add_argument("-i", "--image", help = "relative/absolute path of the image file")
-    Arg_Par.add_argument("-v", "--video", help = "relative/absolute path of the recorded video file")
     Arg_Par.add_argument("-c", "--camera",help = "camera")
     arg_list = vars(Arg_Par.parse_args())
     return arg_list
-def open_img(arg_):
-    mg_src = arg_["image"]
-    img = cv2.imread(mg_src)
-    img_arr = np.array(img, 'uint8')
-    return img_arr	 
-def open_vid(arg_):
-    vid_src = "videos/video1.mkv"
-    vid = cv2.VideoCapture(arg_["video"])
-    return vid
 def open_camera(arg_):
     vid = cv2.VideoCapture(arg_)
     return vid
@@ -204,37 +191,6 @@ if __name__ == "__main__":
     
     scale_factor = 3
     Face_Detect = Face_Detector(skin_detect, frontOrganDetect)
-    if in_arg["image"] != None:
-        img = open_img(in_arg)
-        rects = Face_Detect.Detect_Face_Img(img,size1,size2)
-        print('rects',rects)
-        n = 1
-        face_crop = None
-        for i,r in enumerate(rects):
-            x,y,w,h = r
-            face = cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 1)
-            face_crop = img[y:y+h, x:x+w]
-            final_face = frontOrganDetect.detect(face_crop)
-            for item in final_face:
-                if len(final_face[item]) > 0:
-                    x0,y0,w0,h0 = final_face[item]
-                    print(f'rr{x0,y0,w0,h0}')
-                    xx = x+x0
-                    yy = y+y0
-                    cv2.rectangle(img, (xx, yy), (xx+w0, yy+h0), (0, 0, 255), 1)
-            print(f'frontOrganDetect {n} ==> {final_face} \n')
-            n += 1
-            # try:
-            #     cv2.imwrite('face/'+checkFileName(), final_face)
-            #     print(f'{n}detect')
-            # except:
-            #     print('0')
-        cv2.imshow('img',img)
-        if cv2.waitKey(0) & 0xFF == ord("q"):
-            sys.exit(0)
-    if in_arg["video"] != None:
-        vid = open_vid(in_arg)
-        Face_Detect.Detect_Face_Vid(vid,size1,size2,scale_factor)
     if in_arg["camera"] != None:
         cam = open_camera(int(in_arg["camera"]))
         Face_Detect.Detect_Face_Vid(cam,size1,size2,scale_factor)

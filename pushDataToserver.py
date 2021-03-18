@@ -2,7 +2,7 @@
 import requests, time, os
 
 def sendData(file):
-    url = 'http://127.0.0.1:8000/getData'
+    url = 'http://92.168.43.120:8000/getData'
     # myobj = {
     #     'postName' : 'koko',
     #     'description' : '123456789',

@@ -14,7 +14,7 @@ def sendData(file):
     # x = requests.post(url, data = myobj, files=file)
     x = requests.post(url, files=file)
     if x.text == "200":
-        os.remove(file)
+        os.remove(f'data/{file}')
     else :
         print(f'Error {file}')
 
@@ -23,7 +23,7 @@ amountFile = len(entries)
 n = 0
 for file in entries:
     sendData(f'data/{file}')
-    time.sleep(1)
+    # time.sleep(1)
     n+=1
     print(f'Processing... {(amountFile/n)*100}%')
 print(entries)

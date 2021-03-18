@@ -73,6 +73,9 @@ class Face_Detector():
                         # font = cv2.FONT_HERSHEY_SIMPLEX
                         organCheck = self._organ_detect.detect(face_crop)
                         print(organCheck)
+                        f = open("./LevelSecurity.txt", "r").read()
+                        print('LevelSecurity => ',f)
+                        
                         if organCheck['Eyes'] is not None or organCheck['Nose'] is not None or organCheck['Mouth'] is not None:
                             rects2 = rects
                             cv2.rectangle(overlay, (x0,y0), (x0+w, y0+h), (0,0,255), 2)
@@ -92,7 +95,11 @@ class Face_Detector():
                             print(f'save ==> {checkFileName(checkList)}')
                                 
                             cv2.addWeighted(overlay, alpha, img, 1-alpha,0, img)
-                            print('skin และ อวัยวะ')
+                            print(f'skin และ อวัยวะ {checkList} {len(checkList)}')
+                            if len(checkList) >= int(f):
+                                print('PASSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS')
+                            else:
+                                print('NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO')
                         else:
                             print('skin แต่ ไม่เจออวัยวะ')
             else:
@@ -138,10 +145,11 @@ class Face_Detector():
 
 def checkFileName(checkList):
     # entries = os.listdir('./face')
+    #'2012-09-04 06:00:00.000000'
     x = datetime.datetime.now()
-    x = str(x.strftime("%d:%m:%Y-%H:%M:%S:%f"))
+    x = str(x.strftime("%Y-%m-%d+%H:%M:%S_%f"))
     # return f'img{str(len(entries)+1)}.jpg'
-    return f'data/{x}-{checkList}-.jpg'
+    return f'data/{x}={checkList}=.jpg'
 
 #! Main
 def Arg_Parser():
@@ -230,4 +238,3 @@ if __name__ == "__main__":
     if in_arg["camera"] != None:
         cam = open_camera(int(in_arg["camera"]))
         Face_Detect.Detect_Face_Vid(cam,size1,size2,scale_factor)
-

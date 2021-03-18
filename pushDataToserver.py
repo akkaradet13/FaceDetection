@@ -22,7 +22,7 @@ entries = os.listdir('data/')
 amountFile = len(entries)
 n = 0
 for file in entries:
-    sendData(f'face2/{file}')
+    sendData(f'data/{file}')
     time.sleep(1)
     n+=1
     print(f'Processing... {(amountFile/n)*100}%')
